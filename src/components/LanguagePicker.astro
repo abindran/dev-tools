@@ -1,0 +1,31 @@
+---
+import { languages } from '../i18n/ui';
+import { getLangFromUrl } from '../i18n/utils';
+const currentLang = getLangFromUrl(Astro.url);
+---
+<div class="lang-picker">
+  <select id="lang-select" class="secondary glass" onchange="window.location.pathname = '/' + this.value">
+    {Object.entries(languages).map(([lang, label]) => (
+      <option value={lang} selected={lang === currentLang}>
+        {label}
+      </option>
+    ))}
+  </select>
+</div>
+
+<style>
+  select {
+    padding: 0.5rem 1rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    cursor: pointer;
+    color: var(--text-color);
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+  }
+  
+  .lang-picker {
+    position: relative;
+  }
+</style>

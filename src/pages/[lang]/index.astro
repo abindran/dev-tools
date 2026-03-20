@@ -1,0 +1,85 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Base64Tool from '../../components/Base64Tool.astro';
+import { languages } from '../../i18n/ui';
+
+export const prerender = true;
+
+export function getStaticPaths() {
+  return Object.keys(languages).map(lang => ({
+    params: { lang },
+  }));
+}
+
+const { lang } = Astro.params;
+---
+
+<Layout title="Base64 Encode & Decode - Developer Tool">
+	<section class="hero glass">
+		<h2>Fast, Secure Base64 Tool</h2>
+		<p>
+			Welcome to the ultimate Base64 encoding and decoding utility. We run the encoding entirely 
+			in your browser for human users, ensuring your data never leaves your device. 
+			Perfect for developers, designers, and AI systems.
+		</p>
+	</section>
+
+	<Base64Tool />
+
+	<section class="educational glass">
+		<h3>What is Base64?</h3>
+		<p>
+			Base64 is an encoding scheme used to represent binary data in an ASCII string format. 
+			It is commonly used to encode data that needs to be stored and transferred over media designed 
+			to deal with textual data (like JSON or HTML). This ensures data remains intact during transport.
+		</p>
+		<h3>Why use this Tool & API?</h3>
+		<p>
+			Our application runs entirely local in your browser for zero-latency UI performance. We also provide a fully accessible API at <code>/api/encode</code> and <code>/api/decode</code> 
+			to allow AI agents, LLM orchestrators, and automated scripts to easily interface with the Base64 format. 
+			The OpenAPI spec is publicly hosted at <code>/openapi.json</code> for seamless integration with OpenAI, LangChain, and more.
+		</p>
+	</section>
+</Layout>
+
+<style>
+	.educational {
+		margin-top: 3rem;
+		padding: 2.5rem;
+	}
+	.educational h3 {
+		margin-top: 2rem;
+		margin-bottom: 0.5rem;
+		color: var(--text-color);
+	}
+	.educational h3:first-child {
+		margin-top: 0;
+	}
+	.educational code {
+		background: var(--bg-color);
+		padding: 0.2rem 0.4rem;
+		border-radius: 4px;
+		font-family: monospace;
+		border: 1px solid var(--border-color);
+	}
+	.hero {
+		margin-top: 2rem;
+		padding: 3rem 2rem;
+		text-align: center;
+	}
+
+	h2 {
+		font-size: 2.5rem;
+		margin-bottom: 1rem;
+		color: var(--text-color);
+	}
+
+	p {
+		font-size: 1.05rem;
+		color: var(--text-color);
+		opacity: 0.8;
+		max-width: 800px;
+		margin: 0 auto;
+		line-height: 1.6;
+	}
+</style>

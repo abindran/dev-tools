@@ -1,0 +1,91 @@
+---
+import '../styles/global.css';
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import LanguagePicker from '../components/LanguagePicker.astro';
+
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<!doctype html>
+<html lang={lang}>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content="Blazing fast Base64 Encoder and Decoder developer tool with API. Zero-latency processing." />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+		<script type="application/ld+json" set:html={JSON.stringify({
+			"@context": "https://schema.org",
+			"@type": "WebApplication",
+			"name": "Base64 Developer Tool",
+			"applicationCategory": "DeveloperApplication",
+			"operatingSystem": "All",
+			"offers": {
+				"@type": "Offer",
+				"price": "0"
+			},
+			"description": "A comprehensive web-based tool and API for Base64 encoding and decoding."
+		})} />
+	</head>
+	<body>
+		<header class="container header-layout">
+			<h1>{t('nav.title')}</h1>
+			<div class="controls">
+				<LanguagePicker />
+				<ThemeToggle />
+			</div>
+		</header>
+		<main class="container">
+			<slot />
+		</main>
+
+		<script is:inline>
+			const theme = (() => {
+				if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+					return localStorage.getItem('theme');
+				}
+				if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+					return 'dark';
+				}
+				return 'light';
+			})();
+		
+			if (theme === 'light') {
+				document.documentElement.setAttribute('data-theme', 'light');
+			} else {
+				document.documentElement.setAttribute('data-theme', 'dark');
+			}
+			window.localStorage.setItem('theme', theme);
+		</script>
+	</body>
+</html>
+
+<style>
+	.header-layout {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding-top: 2rem;
+		padding-bottom: 2rem;
+	}
+	h1 {
+		font-size: 1.5rem;
+		font-weight: 800;
+		background: -webkit-linear-gradient(45deg, var(--accent-color), #8a2be2);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+	.controls {
+		display: flex;
+		gap: 1rem;
+		align-items: center;
+	}
+</style>
