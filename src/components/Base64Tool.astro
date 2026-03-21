@@ -4,140 +4,294 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 ---
 
-<div class="tool-container glass">
-  <div class="input-area">
-    <textarea id="input-text" placeholder={t('tool.placeholder')}></textarea>
+<section class="tool-section">
+  <div class="container">
+    <!-- Mode Tabs -->
+    <div class="mode-tabs">
+      <button id="tab-encode" class="tab active" data-mode="encode">{t('tool.encode')}</button>
+      <button id="tab-decode" class="tab" data-mode="decode">{t('tool.decode')}</button>
+    </div>
+
+    <!-- Tool Card -->
+    <div class="tool-card card">
+      <div class="tool-grid">
+        <div class="tool-pane">
+          <div class="pane-header">
+            <label for="input-text" class="pane-label" id="input-label">Text</label>
+            <span class="char-count" id="input-count">0 chars</span>
+          </div>
+          <textarea id="input-text" class="tool-textarea" placeholder={t('tool.placeholder')} spellcheck="false"></textarea>
+        </div>
+
+        <div class="tool-divider">
+          <button id="btn-convert" class="btn btn-primary btn-lg convert-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+        <div class="tool-pane">
+          <div class="pane-header">
+            <label for="output-text" class="pane-label" id="output-label">Base64</label>
+            <div class="pane-actions">
+              <button id="btn-copy" class="btn-icon" title={t('tool.copy')}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span id="copy-text">{t('tool.copy')}</span>
+              </button>
+            </div>
+          </div>
+          <textarea id="output-text" class="tool-textarea" placeholder={t('tool.result')} readonly spellcheck="false"></textarea>
+        </div>
+      </div>
+
+      <div class="tool-footer">
+        <button id="btn-clear" class="btn btn-secondary">{t('tool.clear')}</button>
+        <button id="btn-sample" class="btn btn-secondary">Try Sample</button>
+      </div>
+    </div>
   </div>
-  <div class="actions">
-    <button id="btn-encode">{t('tool.encode')} &rarr;</button>
-    <button id="btn-decode" class="secondary">&larr; {t('tool.decode')}</button>
-    <button id="btn-clear" class="secondary" style="margin-top: 1rem;">{t('tool.clear')}</button>
-  </div>
-  <div class="output-area">
-    <textarea id="output-text" placeholder={t('tool.result')} readonly></textarea>
-    <button id="btn-copy" class="copy-btn secondary">{t('tool.copy')}</button>
-  </div>
-</div>
+</section>
 
 <script>
   const inputEl = document.getElementById('input-text') as HTMLTextAreaElement;
   const outputEl = document.getElementById('output-text') as HTMLTextAreaElement;
-  const btnEncode = document.getElementById('btn-encode');
-  const btnDecode = document.getElementById('btn-decode');
+  const btnConvert = document.getElementById('btn-convert');
   const btnClear = document.getElementById('btn-clear');
   const btnCopy = document.getElementById('btn-copy');
+  const btnSample = document.getElementById('btn-sample');
+  const copyText = document.getElementById('copy-text');
+  const inputCount = document.getElementById('input-count');
+  const inputLabel = document.getElementById('input-label');
+  const outputLabel = document.getElementById('output-label');
+  const tabEncode = document.getElementById('tab-encode');
+  const tabDecode = document.getElementById('tab-decode');
 
-  const updateHeight = (el: HTMLTextAreaElement) => {
-    el.style.height = 'auto';
-    el.style.height = (el.scrollHeight) + 'px';
-  };
+  let mode: 'encode' | 'decode' = 'encode';
 
-  inputEl?.addEventListener('input', () => updateHeight(inputEl));
+  function setMode(m: 'encode' | 'decode') {
+    mode = m;
+    tabEncode?.classList.toggle('active', m === 'encode');
+    tabDecode?.classList.toggle('active', m === 'decode');
+    if (inputLabel) inputLabel.textContent = m === 'encode' ? 'Text' : 'Base64';
+    if (outputLabel) outputLabel.textContent = m === 'encode' ? 'Base64' : 'Text';
+    inputEl.placeholder = m === 'encode' ? 'Type or paste your text here...' : 'Paste Base64 string here...';
+    outputEl.placeholder = m === 'encode' ? 'Encoded Base64 will appear here...' : 'Decoded text will appear here...';
+  }
 
-  btnEncode?.addEventListener('click', () => {
-    if (!inputEl.value) return;
-    try {
-      const encoded = btoa(unescape(encodeURIComponent(inputEl.value)));
-      outputEl.value = encoded;
-      updateHeight(outputEl);
-    } catch(e) {
-      outputEl.value = 'Error: Invalid input for encoding.';
-    }
+  tabEncode?.addEventListener('click', () => setMode('encode'));
+  tabDecode?.addEventListener('click', () => setMode('decode'));
+
+  inputEl?.addEventListener('input', () => {
+    if (inputCount) inputCount.textContent = `${inputEl.value.length} chars`;
   });
 
-  btnDecode?.addEventListener('click', () => {
-    if (!inputEl.value) return;
+  function convert() {
+    if (!inputEl.value.trim()) return;
     try {
-      const decoded = decodeURIComponent(escape(atob(inputEl.value)));
-      outputEl.value = decoded;
-      updateHeight(outputEl);
-    } catch(e) {
-      outputEl.value = 'Error: Invalid Base64 string.';
+      if (mode === 'encode') {
+        outputEl.value = btoa(unescape(encodeURIComponent(inputEl.value)));
+      } else {
+        let b64 = inputEl.value.replace(/[\s\r\n]+/g, '');
+        while (b64.length % 4 !== 0) b64 += '=';
+        const raw = atob(b64);
+        try { outputEl.value = decodeURIComponent(escape(raw)); }
+        catch { outputEl.value = raw; }
+      }
+    } catch (e) {
+      outputEl.value = mode === 'encode' ? 'Error: Could not encode input.' : 'Error: Invalid Base64 string.';
     }
+  }
+
+  btnConvert?.addEventListener('click', convert);
+
+  // Allow live conversion on input
+  inputEl?.addEventListener('input', () => {
+    if (inputEl.value.trim()) convert();
   });
 
   btnClear?.addEventListener('click', () => {
     inputEl.value = '';
     outputEl.value = '';
-    inputEl.style.height = '150px';
-    outputEl.style.height = '150px';
+    if (inputCount) inputCount.textContent = '0 chars';
   });
 
   btnCopy?.addEventListener('click', () => {
-    if (outputEl.value) {
-      navigator.clipboard.writeText(outputEl.value);
-      const originalText = btnCopy.innerText;
-      btnCopy.innerText = 'Copied!';
-      setTimeout(() => btnCopy.innerText = originalText, 2000);
+    if (!outputEl.value) return;
+    navigator.clipboard.writeText(outputEl.value);
+    if (copyText) {
+      copyText.textContent = 'Copied!';
+      setTimeout(() => { if (copyText) copyText.textContent = 'Copy'; }, 1500);
     }
+  });
+
+  btnSample?.addEventListener('click', () => {
+    if (mode === 'encode') {
+      inputEl.value = 'Hello, World! This is a Base64 encoding example. 🚀';
+    } else {
+      inputEl.value = 'SGVsbG8sIFdvcmxkISBUaGlzIGlzIGEgQmFzZTY0IGVuY29kaW5nIGV4YW1wbGUuIPCfmoA=';
+    }
+    if (inputCount) inputCount.textContent = `${inputEl.value.length} chars`;
+    convert();
   });
 </script>
 
 <style>
-  .tool-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    padding: 2rem;
-    margin-top: 2.5rem;
-  }
-  
-  @media (min-width: 768px) {
-    .tool-container {
-      flex-direction: row;
-      align-items: stretch;
-    }
+  .tool-section {
+    padding: 2rem 0;
   }
 
-  .input-area, .output-area {
-    flex: 1;
+  .mode-tabs {
     display: flex;
-    flex-direction: column;
-    position: relative;
-    width: 100%;
+    gap: 0.25rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.25rem;
+    width: fit-content;
+    margin-bottom: 1rem;
   }
 
-  textarea {
-    width: 100%;
-    min-height: 250px;
+  .tab {
+    padding: 0.5rem 1.5rem;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: var(--font);
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .tab:hover {
+    color: var(--text-primary);
+  }
+
+  .tab.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .tool-card {
     padding: 1.5rem;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-color);
-    color: var(--text-color);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-size: 1rem;
-    line-height: 1.5;
-    resize: none;
-    transition: box-shadow 0.3s ease, border-color 0.3s ease;
   }
 
-  textarea:focus {
-    outline: none;
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.2);
-  }
-
-  .actions {
-    display: flex;
-    flex-direction: column;
+  .tool-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     gap: 1rem;
-    justify-content: center;
-    padding: 1rem 0;
+    align-items: stretch;
   }
 
-  @media (max-width: 767px) {
-    .actions {
-      flex-direction: row;
-      flex-wrap: wrap;
+  @media (max-width: 768px) {
+    .tool-grid {
+      grid-template-columns: 1fr;
     }
   }
 
-  .copy-btn {
-    position: absolute;
-    bottom: 1rem;
-    right: 1rem;
-    font-size: 0.8rem;
-    padding: 0.4rem 0.8rem;
+  .tool-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .pane-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .pane-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  .char-count {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pane-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .btn-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font);
+    font-size: 0.7rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .btn-icon:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  .tool-textarea {
+    width: 100%;
+    min-height: 220px;
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    resize: vertical;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    outline: none;
+  }
+
+  .tool-textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .tool-textarea::placeholder {
+    color: var(--text-muted);
+  }
+
+  .tool-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .convert-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    padding: 0;
+  }
+
+  @media (max-width: 768px) {
+    .convert-btn svg {
+      transform: rotate(90deg);
+    }
+  }
+
+  .tool-footer {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
   }
 </style>

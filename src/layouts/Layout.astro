@@ -6,9 +6,10 @@ import LanguagePicker from '../components/LanguagePicker.astro';
 
 interface Props {
 	title: string;
+	description?: string;
 }
 
-const { title } = Astro.props;
+const { title, description = 'Free online Base64 encoder and decoder. Encode text, decode Base64 strings instantly in your browser. 100% client-side, fast, and secure.' } = Astro.props;
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 ---
@@ -17,75 +18,107 @@ const t = useTranslations(lang);
 <html lang={lang}>
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="description" content="Blazing fast Base64 Encoder and Decoder developer tool with API. Zero-latency processing." />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="description" content={description} />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
+		<meta name="robots" content="index, follow" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:type" content="website" />
 		<title>{title}</title>
 		<script type="application/ld+json" set:html={JSON.stringify({
 			"@context": "https://schema.org",
 			"@type": "WebApplication",
-			"name": "Base64 Developer Tool",
+			"name": "Base64 Tool",
 			"applicationCategory": "DeveloperApplication",
 			"operatingSystem": "All",
-			"offers": {
-				"@type": "Offer",
-				"price": "0"
-			},
-			"description": "A comprehensive web-based tool and API for Base64 encoding and decoding."
+			"offers": { "@type": "Offer", "price": "0" },
+			"description": "Free online Base64 encoder and decoder with API access for developers and AI systems."
 		})} />
+		<script is:inline>
+			;(function() {
+				var t = localStorage.getItem('theme');
+				if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+				document.documentElement.setAttribute('data-theme', t);
+				localStorage.setItem('theme', t);
+			})();
+		</script>
 	</head>
 	<body>
-		<header class="container header-layout">
-			<h1>{t('nav.title')}</h1>
-			<div class="controls">
-				<LanguagePicker />
-				<ThemeToggle />
+		<nav class="navbar">
+			<div class="container nav-inner">
+				<a href="/" class="logo">
+					<span class="logo-icon">⚡</span>
+					<span class="logo-text">{t('nav.title')}</span>
+				</a>
+				<div class="nav-controls">
+					<LanguagePicker />
+					<ThemeToggle />
+				</div>
 			</div>
-		</header>
-		<main class="container">
+		</nav>
+		<main>
 			<slot />
 		</main>
-
-		<script is:inline>
-			const theme = (() => {
-				if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
-					return localStorage.getItem('theme');
-				}
-				if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-					return 'dark';
-				}
-				return 'light';
-			})();
-		
-			if (theme === 'light') {
-				document.documentElement.setAttribute('data-theme', 'light');
-			} else {
-				document.documentElement.setAttribute('data-theme', 'dark');
-			}
-			window.localStorage.setItem('theme', theme);
-		</script>
+		<footer class="footer">
+			<div class="container footer-inner">
+				<p class="text-muted">© 2025 Base64 Tool · 100% free, open source · All processing happens in your browser</p>
+			</div>
+		</footer>
 	</body>
 </html>
 
 <style>
-	.header-layout {
+	.navbar {
+		position: sticky;
+		top: 0;
+		z-index: 100;
+		background: var(--bg-secondary);
+		border-bottom: 1px solid var(--border);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+	}
+	.nav-inner {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding-top: 2rem;
-		padding-bottom: 2rem;
+		height: 60px;
 	}
-	h1 {
-		font-size: 1.5rem;
-		font-weight: 800;
-		background: -webkit-linear-gradient(45deg, var(--accent-color), #8a2be2);
+	.logo {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		text-decoration: none;
+		color: var(--text-primary);
+		font-weight: 700;
+		font-size: 1.1rem;
+	}
+	.logo-icon {
+		font-size: 1.3rem;
+	}
+	.logo-text {
+		background: linear-gradient(135deg, var(--accent), #a855f7);
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
+		background-clip: text;
 	}
-	.controls {
+	.nav-controls {
 		display: flex;
-		gap: 1rem;
+		gap: 0.75rem;
 		align-items: center;
+	}
+	main {
+		min-height: calc(100vh - 60px - 60px);
+	}
+	.footer {
+		border-top: 1px solid var(--border);
+		padding: 1.25rem 0;
+	}
+	.footer-inner {
+		text-align: center;
+	}
+	.footer p {
+		font-size: 0.8rem;
 	}
 </style>

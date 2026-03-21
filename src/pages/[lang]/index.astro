@@ -6,7 +6,7 @@ import { languages } from '../../i18n/ui';
 export const prerender = true;
 
 export function getStaticPaths() {
-  return Object.keys(languages).map(lang => ({
+  return Object.keys(languages).filter(l => l !== 'en').map(lang => ({
     params: { lang },
   }));
 }
@@ -14,72 +14,101 @@ export function getStaticPaths() {
 const { lang } = Astro.params;
 ---
 
-<Layout title="Base64 Encode & Decode - Developer Tool">
-	<section class="hero glass">
-		<h2>Fast, Secure Base64 Tool</h2>
-		<p>
-			Welcome to the ultimate Base64 encoding and decoding utility. We run the encoding entirely 
-			in your browser for human users, ensuring your data never leaves your device. 
-			Perfect for developers, designers, and AI systems.
-		</p>
+<Layout title="Base64 Encode & Decode Online - Free Developer Tool">
+	<section class="hero">
+		<div class="container">
+			<div class="hero-badge">Free & Open Source</div>
+			<h2 class="hero-title">Base64 Encode & Decode</h2>
+			<p class="hero-subtitle">
+				Fast, secure, and 100% client-side. Your data never leaves your browser.
+			</p>
+		</div>
 	</section>
 
 	<Base64Tool />
 
-	<section class="educational glass">
-		<h3>What is Base64?</h3>
-		<p>
-			Base64 is an encoding scheme used to represent binary data in an ASCII string format. 
-			It is commonly used to encode data that needs to be stored and transferred over media designed 
-			to deal with textual data (like JSON or HTML). This ensures data remains intact during transport.
-		</p>
-		<h3>Why use this Tool & API?</h3>
-		<p>
-			Our application runs entirely local in your browser for zero-latency UI performance. We also provide a fully accessible API at <code>/api/encode</code> and <code>/api/decode</code> 
-			to allow AI agents, LLM orchestrators, and automated scripts to easily interface with the Base64 format. 
-			The OpenAPI spec is publicly hosted at <code>/openapi.json</code> for seamless integration with OpenAI, LangChain, and more.
-		</p>
+	<section class="features">
+		<div class="container">
+			<div class="features-grid">
+				<div class="feature card">
+					<div class="feature-icon">⚡</div>
+					<h3>Lightning Fast</h3>
+					<p>Processing happens entirely in your browser with zero server roundtrips.</p>
+				</div>
+				<div class="feature card">
+					<div class="feature-icon">🔒</div>
+					<h3>100% Secure</h3>
+					<p>Your data never leaves your device. No server storage, no logging.</p>
+				</div>
+				<div class="feature card">
+					<div class="feature-icon">🤖</div>
+					<h3>API Access</h3>
+					<p>RESTful API at <code>/api/encode</code> and <code>/api/decode</code>.</p>
+				</div>
+			</div>
+		</div>
 	</section>
 </Layout>
 
 <style>
-	.educational {
-		margin-top: 3rem;
-		padding: 2.5rem;
-	}
-	.educational h3 {
-		margin-top: 2rem;
-		margin-bottom: 0.5rem;
-		color: var(--text-color);
-	}
-	.educational h3:first-child {
-		margin-top: 0;
-	}
-	.educational code {
-		background: var(--bg-color);
-		padding: 0.2rem 0.4rem;
-		border-radius: 4px;
-		font-family: monospace;
-		border: 1px solid var(--border-color);
-	}
 	.hero {
-		margin-top: 2rem;
-		padding: 3rem 2rem;
+		text-align: center;
+		padding: 3rem 0 1rem;
+	}
+	.hero-badge {
+		display: inline-block;
+		padding: 0.25rem 0.75rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--accent);
+		background: var(--accent-glow);
+		border-radius: 999px;
+		border: 1px solid var(--accent);
+		margin-bottom: 1rem;
+	}
+	.hero-title {
+		font-size: clamp(1.75rem, 5vw, 2.5rem);
+		font-weight: 800;
+		color: var(--text-primary);
+		margin-bottom: 0.5rem;
+	}
+	.hero-subtitle {
+		color: var(--text-secondary);
+		font-size: 1.05rem;
+		max-width: 500px;
+		margin: 0 auto;
+	}
+	.features {
+		padding: 3rem 0;
+	}
+	.features-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+		gap: 1rem;
+	}
+	.feature {
+		padding: 1.5rem;
 		text-align: center;
 	}
-
-	h2 {
-		font-size: 2.5rem;
-		margin-bottom: 1rem;
-		color: var(--text-color);
+	.feature-icon {
+		font-size: 2rem;
+		margin-bottom: 0.75rem;
 	}
-
-	p {
-		font-size: 1.05rem;
-		color: var(--text-color);
-		opacity: 0.8;
-		max-width: 800px;
-		margin: 0 auto;
-		line-height: 1.6;
+	.feature h3 {
+		font-size: 1rem;
+		font-weight: 700;
+		margin-bottom: 0.5rem;
+	}
+	.feature p {
+		font-size: 0.875rem;
+		color: var(--text-secondary);
+		line-height: 1.5;
+	}
+	.feature code {
+		background: var(--bg-tertiary);
+		padding: 0.15rem 0.35rem;
+		border-radius: 4px;
+		font-size: 0.8rem;
+		border: 1px solid var(--border);
 	}
 </style>
