@@ -2,47 +2,20 @@
 import { languages } from '../i18n/ui';
 import { getLangFromUrl } from '../i18n/utils';
 const currentLang = getLangFromUrl(Astro.url);
+const langEntries = Object.entries(languages);
 ---
-<div class="lang-picker">
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-  <select id="lang-select" onchange="window.location.pathname = this.value === 'en' ? '/' : '/' + this.value">
-    {Object.entries(languages).map(([lang, label]) => (
-      <option value={lang} selected={lang === currentLang}>
-        {label}
-      </option>
-    ))}
-  </select>
+<div class="lang-sw">
+  {langEntries.map(([code]) => {
+    const href = code === 'en' ? '/' : `/${code}`;
+    const isActive = code === currentLang;
+    return (
+      <a
+        href={href}
+        class={`lang-item ${isActive ? 'lang-active' : ''}`}
+        title={languages[code as keyof typeof languages]}
+      >
+        {code.toUpperCase()}
+      </a>
+    );
+  })}
 </div>
-
-<style>
-  .lang-picker {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.375rem 0.625rem;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    background: var(--bg-tertiary);
-    color: var(--text-secondary);
-    transition: all var(--transition);
-    cursor: pointer;
-  }
-  .lang-picker:hover {
-    border-color: var(--border-hover);
-    color: var(--text-primary);
-    background: var(--border);
-  }
-  select {
-    background: transparent;
-    border: none;
-    color: inherit;
-    font-family: var(--font);
-    font-size: 0.8rem;
-    font-weight: 500;
-    cursor: pointer;
-    outline: none;
-    appearance: none;
-    -webkit-appearance: none;
-    padding-right: 0.25rem;
-  }
-</style>
