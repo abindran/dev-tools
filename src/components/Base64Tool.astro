@@ -91,13 +91,30 @@ const t = useTranslations(lang);
         outputEl.value = btoa(unescape(encodeURIComponent(inputEl.value)));
       } else {
         let b64 = inputEl.value.replace(/[\s\r\n]+/g, '');
+        // Validate characters before attempting decode
+        const invalidChar = b64.replace(/=+$/, '').match(/[^A-Za-z0-9+/]/);
+        if (invalidChar) {
+          outputEl.value = `⚠ Invalid character "${invalidChar[0]}" found at position ${(invalidChar.index ?? 0) + 1}. Base64 only allows A-Z, a-z, 0-9, +, / and = for padding.`;
+          return;
+        }
         while (b64.length % 4 !== 0) b64 += '=';
         const raw = atob(b64);
         try { outputEl.value = decodeURIComponent(escape(raw)); }
         catch { outputEl.value = raw; }
       }
     } catch (e) {
-      outputEl.value = mode === 'encode' ? 'Error: Could not encode input.' : 'Error: Invalid Base64 string.';
+      if (mode === 'encode') {
+        outputEl.value = '⚠ Encoding failed — the input contains characters that cannot be converted. Try removing special or unsupported characters.';
+      } else {
+        const stripped = inputEl.value.replace(/[\s\r\n=]+/g, '');
+        if (stripped.length === 0) {
+          outputEl.value = '⚠ The input is empty or contains only whitespace/padding. Please paste a valid Base64 string.';
+        } else if (stripped.length < 2) {
+          outputEl.value = '⚠ The input is too short to be valid Base64. A Base64 string must be at least 2 characters long.';
+        } else {
+          outputEl.value = '⚠ Could not decode — the input is not a valid Base64 string. Make sure it only contains A-Z, a-z, 0-9, +, / and = characters.';
+        }
+      }
     }
   }
 
