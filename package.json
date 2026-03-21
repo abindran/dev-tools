@@ -8,14 +8,22 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "test": "npm run build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "cf:build": "astro build",
+    "cf:deploy": "wrangler deploy --config dist/server/wrangler.json",
+    "cf:deploy:prod": "npm run cf:build && npm run cf:deploy"
   },
   "dependencies": {
-    "@astrojs/node": "^10.0.3",
-    "astro": "^6.0.7"
+    "@astrojs/check": "^0.9.8",
+    "astro": "^6.0.7",
+    "iconv-lite": "^0.7.2",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "@types/node": "^25.5.0"
+    "@astrojs/cloudflare": "^13.1.3",
+    "@types/node": "^25.5.0",
+    "wrangler": "^4.76.0"
   }
 }

@@ -27,7 +27,7 @@ const t = useTranslations(lang);
 		<meta property="og:description" content={description} />
 		<meta property="og:type" content="website" />
 		<title>{title}</title>
-		<script type="application/ld+json" set:html={JSON.stringify({
+		<script is:inline type="application/ld+json" set:html={JSON.stringify({
 			"@context": "https://schema.org",
 			"@type": "WebApplication",
 			"name": "Base64 Tool",

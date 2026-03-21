@@ -26,6 +26,11 @@
                   "text": {
                     "type": "string",
                     "description": "The raw text string to encode."
+                  },
+                  "charset": {
+                    "type": "string",
+                    "description": "Character encoding to use (e.g. utf-8, iso-8859-1, windows-1252, shift_jis). Defaults to utf-8.",
+                    "default": "utf-8"
                   }
                 },
                 "required": ["text"]
@@ -67,6 +72,11 @@
                   "base64": {
                     "type": "string",
                     "description": "The Base64 encoded string to decode."
+                  },
+                  "charset": {
+                    "type": "string",
+                    "description": "Character encoding to use when decoding (e.g. utf-8, iso-8859-1, windows-1252, shift_jis). Defaults to utf-8.",
+                    "default": "utf-8"
                   }
                 },
                 "required": ["base64"]

@@ -12,6 +12,54 @@ const t = useTranslations(lang);
       <button id="tab-decode" class="tab" data-mode="decode">{t('tool.decode')}</button>
     </div>
 
+    <!-- Charset Selector -->
+    <div class="charset-bar">
+      <label for="charset-select" class="charset-label">{t('tool.charset')}</label>
+      <select id="charset-select" class="charset-select">
+        <optgroup label="Unicode">
+          <option value="utf-8" selected>UTF-8</option>
+          <option value="utf-16le">UTF-16LE</option>
+          <option value="utf-16be">UTF-16BE</option>
+        </optgroup>
+        <optgroup label="ISO-8859">
+          <option value="iso-8859-1">ISO-8859-1 (Latin-1 / Western)</option>
+          <option value="iso-8859-2">ISO-8859-2 (Latin-2 / Central European)</option>
+          <option value="iso-8859-3">ISO-8859-3 (Latin-3 / South European)</option>
+          <option value="iso-8859-4">ISO-8859-4 (Latin-4 / North European)</option>
+          <option value="iso-8859-5">ISO-8859-5 (Cyrillic)</option>
+          <option value="iso-8859-6">ISO-8859-6 (Arabic)</option>
+          <option value="iso-8859-7">ISO-8859-7 (Greek)</option>
+          <option value="iso-8859-8">ISO-8859-8 (Hebrew)</option>
+          <option value="iso-8859-9">ISO-8859-9 (Turkish)</option>
+          <option value="iso-8859-10">ISO-8859-10 (Nordic)</option>
+          <option value="iso-8859-13">ISO-8859-13 (Baltic)</option>
+          <option value="iso-8859-14">ISO-8859-14 (Celtic)</option>
+          <option value="iso-8859-15">ISO-8859-15 (Latin-9)</option>
+        </optgroup>
+        <optgroup label="Windows">
+          <option value="windows-1250">Windows-1250 (Central European)</option>
+          <option value="windows-1251">Windows-1251 (Cyrillic)</option>
+          <option value="windows-1252">Windows-1252 (Western)</option>
+          <option value="windows-1253">Windows-1253 (Greek)</option>
+          <option value="windows-1254">Windows-1254 (Turkish)</option>
+          <option value="windows-1255">Windows-1255 (Hebrew)</option>
+          <option value="windows-1256">Windows-1256 (Arabic)</option>
+          <option value="windows-1257">Windows-1257 (Baltic)</option>
+          <option value="windows-1258">Windows-1258 (Vietnamese)</option>
+        </optgroup>
+        <optgroup label="Other">
+          <option value="ascii">ASCII</option>
+          <option value="koi8-r">KOI8-R (Russian)</option>
+          <option value="koi8-u">KOI8-U (Ukrainian)</option>
+          <option value="gbk">GBK (Chinese)</option>
+          <option value="big5">Big5 (Chinese Traditional)</option>
+          <option value="euc-jp">EUC-JP (Japanese)</option>
+          <option value="shift_jis">Shift_JIS (Japanese)</option>
+          <option value="euc-kr">EUC-KR (Korean)</option>
+        </optgroup>
+      </select>
+    </div>
+
     <!-- Tool Card -->
     <div class="tool-card card">
       <div class="tool-grid">
@@ -64,8 +112,121 @@ const t = useTranslations(lang);
   const outputLabel = document.getElementById('output-label');
   const tabEncode = document.getElementById('tab-encode');
   const tabDecode = document.getElementById('tab-decode');
+  const charsetSelect = document.getElementById('charset-select') as HTMLSelectElement;
 
   let mode: 'encode' | 'decode' = 'encode';
+
+  // ---- Character encoding helpers ----
+
+  /** Single-byte encodings supported by TextDecoder. We build a reverse
+   *  lookup (char → byte) so we can *encode* text into these charsets
+   *  entirely on the client side. */
+  const singleByteEncodings = new Set([
+    'iso-8859-1', 'iso-8859-2', 'iso-8859-3', 'iso-8859-4',
+    'iso-8859-5', 'iso-8859-6', 'iso-8859-7', 'iso-8859-8', 'iso-8859-9',
+    'iso-8859-10', 'iso-8859-13', 'iso-8859-14', 'iso-8859-15',
+    'windows-1250', 'windows-1251', 'windows-1252', 'windows-1253',
+    'windows-1254', 'windows-1255', 'windows-1256', 'windows-1257',
+    'windows-1258', 'koi8-r', 'koi8-u',
+  ]);
+
+  const reverseTableCache = new Map<string, Map<string, number>>();
+
+  function getReverseTable(encoding: string): Map<string, number> {
+    if (reverseTableCache.has(encoding)) return reverseTableCache.get(encoding)!;
+    const bytes = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) bytes[i] = i;
+    const decoder = new TextDecoder(encoding, { fatal: false });
+    const chars = decoder.decode(bytes);
+    const map = new Map<string, number>();
+    for (let i = 0; i < chars.length; i++) {
+      map.set(chars[i], i);
+    }
+    reverseTableCache.set(encoding, map);
+    return map;
+  }
+
+  /** Convert a JS string to a byte array using the selected encoding. */
+  function textToBytes(text: string, encoding: string): Uint8Array {
+    if (encoding === 'utf-8') {
+      return new TextEncoder().encode(text);
+    }
+    if (encoding === 'ascii') {
+      const result: number[] = [];
+      for (const ch of text) {
+        const code = ch.charCodeAt(0);
+        if (code > 0x7f) {
+          throw new Error(`Character "${ch}" cannot be represented in ASCII`);
+        }
+        result.push(code);
+      }
+      return new Uint8Array(result);
+    }
+    if (encoding === 'utf-16le') {
+      const buf = new Uint8Array(text.length * 2);
+      for (let i = 0; i < text.length; i++) {
+        const code = text.charCodeAt(i);
+        buf[i * 2] = code & 0xff;
+        buf[i * 2 + 1] = (code >> 8) & 0xff;
+      }
+      return buf;
+    }
+    if (encoding === 'utf-16be') {
+      const buf = new Uint8Array(text.length * 2);
+      for (let i = 0; i < text.length; i++) {
+        const code = text.charCodeAt(i);
+        buf[i * 2] = (code >> 8) & 0xff;
+        buf[i * 2 + 1] = code & 0xff;
+      }
+      return buf;
+    }
+    if (singleByteEncodings.has(encoding)) {
+      const table = getReverseTable(encoding);
+      const result: number[] = [];
+      for (const ch of text) {
+        const byte = table.get(ch);
+        if (byte === undefined) {
+          throw new Error(`Character "${ch}" cannot be represented in ${encoding.toUpperCase()}`);
+        }
+        result.push(byte);
+      }
+      return new Uint8Array(result);
+    }
+    // Multi-byte CJK encodings – fall back to API
+    throw new Error('USE_API');
+  }
+
+  /** Convert a byte array to a JS string using the selected encoding. */
+  function bytesToText(bytes: Uint8Array, encoding: string): string {
+    if (encoding === 'ascii') {
+      // TextDecoder maps 'ascii' to windows-1252 – restrict to 0-127
+      return Array.from(bytes).map(b => {
+        if (b > 127) throw new Error(`Byte 0x${b.toString(16)} is outside the ASCII range (0-127)`);
+        return String.fromCharCode(b);
+      }).join('');
+    }
+    const decoder = new TextDecoder(encoding, { fatal: true });
+    return decoder.decode(bytes);
+  }
+
+  /** Encode bytes to a Base64 string. */
+  function bytesToBase64(bytes: Uint8Array): string {
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  }
+
+  /** Decode a Base64 string to bytes. */
+  function base64ToBytes(b64: string): Uint8Array {
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  }
 
   function setMode(m: 'encode' | 'decode') {
     mode = m;
@@ -84,11 +245,45 @@ const t = useTranslations(lang);
     if (inputCount) inputCount.textContent = `${inputEl.value.length} chars`;
   });
 
-  function convert() {
+  /** Encode via server API (used for multi-byte CJK charsets). */
+  async function apiEncode(text: string, charset: string): Promise<string> {
+    const res = await fetch('/api/encode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, charset }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Encoding failed');
+    return data.base64;
+  }
+
+  /** Decode via server API (used for multi-byte CJK charsets). */
+  async function apiDecode(b64: string, charset: string): Promise<string> {
+    const res = await fetch('/api/decode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ base64: b64, charset }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Decoding failed');
+    return data.text;
+  }
+
+  async function convert() {
     if (!inputEl.value.trim()) return;
+    const charset = charsetSelect?.value || 'utf-8';
     try {
       if (mode === 'encode') {
-        outputEl.value = btoa(unescape(encodeURIComponent(inputEl.value)));
+        try {
+          const bytes = textToBytes(inputEl.value, charset);
+          outputEl.value = bytesToBase64(bytes);
+        } catch (err: any) {
+          if (err?.message === 'USE_API') {
+            outputEl.value = await apiEncode(inputEl.value, charset);
+          } else {
+            throw err;
+          }
+        }
       } else {
         let b64 = inputEl.value.replace(/[\s\r\n]+/g, '');
         // Validate characters before attempting decode
@@ -98,21 +293,30 @@ const t = useTranslations(lang);
           return;
         }
         while (b64.length % 4 !== 0) b64 += '=';
-        const raw = atob(b64);
-        try { outputEl.value = decodeURIComponent(escape(raw)); }
-        catch { outputEl.value = raw; }
+        // Multi-byte CJK charsets: use API
+        const multiByte = new Set(['gbk', 'big5', 'euc-jp', 'shift_jis', 'euc-kr']);
+        if (multiByte.has(charset)) {
+          outputEl.value = await apiDecode(b64, charset);
+        } else {
+          const bytes = base64ToBytes(b64);
+          outputEl.value = bytesToText(bytes, charset);
+        }
       }
-    } catch (e) {
+    } catch (e: any) {
       if (mode === 'encode') {
-        outputEl.value = '⚠ Encoding failed — the input contains characters that cannot be converted. Try removing special or unsupported characters.';
+        outputEl.value = e?.message?.startsWith('Character')
+          ? `⚠ ${e.message}`
+          : '⚠ Encoding failed — the input contains characters that cannot be represented in ' + charset.toUpperCase() + '.';
       } else {
         const stripped = inputEl.value.replace(/[\s\r\n=]+/g, '');
         if (stripped.length === 0) {
           outputEl.value = '⚠ The input is empty or contains only whitespace/padding. Please paste a valid Base64 string.';
         } else if (stripped.length < 2) {
           outputEl.value = '⚠ The input is too short to be valid Base64. A Base64 string must be at least 2 characters long.';
+        } else if (e?.message?.startsWith('Byte')) {
+          outputEl.value = `⚠ ${e.message}`;
         } else {
-          outputEl.value = '⚠ Could not decode — the input is not a valid Base64 string. Make sure it only contains A-Z, a-z, 0-9, +, / and = characters.';
+          outputEl.value = '⚠ Could not decode — the input is not valid for ' + charset.toUpperCase() + '. ' + (e?.message || '');
         }
       }
     }
@@ -122,6 +326,11 @@ const t = useTranslations(lang);
 
   // Allow live conversion on input
   inputEl?.addEventListener('input', () => {
+    if (inputEl.value.trim()) convert();
+  });
+
+  // Re-convert when charset changes
+  charsetSelect?.addEventListener('change', () => {
     if (inputEl.value.trim()) convert();
   });
 
@@ -165,6 +374,45 @@ const t = useTranslations(lang);
     padding: 0.25rem;
     width: fit-content;
     margin-bottom: 1rem;
+  }
+
+  .charset-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .charset-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .charset-select {
+    padding: 0.4rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-family: var(--font);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    outline: none;
+    min-width: 200px;
+  }
+
+  .charset-select:hover {
+    border-color: var(--border-hover);
+  }
+
+  .charset-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
   }
 
   .tab {
