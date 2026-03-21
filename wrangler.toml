@@ -1,3 +1,8 @@
 name = "base64decode-online"
 compatibility_date = "2026-03-17"
 compatibility_flags = ["nodejs_compat"]
+
+routes = [
+  { pattern = "base64decode.online", custom_domain = true },
+  { pattern = "www.base64decode.online", custom_domain = true }
+]
