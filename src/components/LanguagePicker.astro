@@ -4,19 +4,22 @@ import { getLangFromUrl } from '../i18n/utils';
 const currentLang = getLangFromUrl(Astro.url);
 const langEntries = Object.entries(languages);
 ---
-<div class="lang-sw">
-  {langEntries.map(([code, name]) => {
-    const href = code === 'en' ? '/' : `/${code}`;
-    const isActive = code === currentLang;
-    return (
-      <a
-        href={href}
-        class={`lang-item ${isActive ? 'lang-active' : ''}`}
-        title={name}
-        lang={code}
-      >
-        {name}
-      </a>
-    );
-  })}
+<div class="lang-bar" role="navigation" aria-label="Language">
+  <div class="lang-bar-inner">
+    {langEntries.map(([code, name]) => {
+      const href = code === 'en' ? '/' : `/${code}`;
+      const isActive = code === currentLang;
+      return (
+        <a
+          href={href}
+          class={`lang-chip ${isActive ? 'is-active' : ''}`}
+          aria-current={isActive ? 'page' : undefined}
+          title={name}
+          lang={code}
+        >
+          {name}
+        </a>
+      );
+    })}
+  </div>
 </div>
