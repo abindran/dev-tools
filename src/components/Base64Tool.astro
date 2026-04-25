@@ -14,7 +14,7 @@ const t = useTranslations(lang);
 
     <!-- Charset Selector -->
     <div class="charset-bar">
-      <label for="charset-select" class="charset-label">{t('tool.charset')}</label>
+      <label for="charset-select" class="charset-label" id="charset-label" data-source-label={t('tool.charset.source')} data-destination-label={t('tool.charset.destination')}>{t('tool.charset.destination')}</label>
       <select id="charset-select" class="charset-select">
         <optgroup label="Unicode">
           <option value="utf-8" selected>UTF-8</option>
@@ -113,6 +113,7 @@ const t = useTranslations(lang);
   const tabEncode = document.getElementById('tab-encode');
   const tabDecode = document.getElementById('tab-decode');
   const charsetSelect = document.getElementById('charset-select') as HTMLSelectElement;
+  const charsetLabel = document.getElementById('charset-label');
 
   let mode: 'encode' | 'decode' = 'encode';
 
@@ -249,6 +250,10 @@ const t = useTranslations(lang);
     mode = m;
     tabEncode?.classList.toggle('active', m === 'encode');
     tabDecode?.classList.toggle('active', m === 'decode');
+    if (charsetLabel) {
+      const ds = (charsetLabel as HTMLElement).dataset;
+      charsetLabel.textContent = (m === 'encode' ? ds.destinationLabel : ds.sourceLabel) || charsetLabel.textContent;
+    }
     if (inputLabel) inputLabel.textContent = m === 'encode' ? 'Text' : 'Base64';
     if (outputLabel) outputLabel.textContent = m === 'encode' ? 'Base64' : 'Text';
     inputEl.placeholder = m === 'encode' ? 'Type or paste your text here...' : 'Paste Base64 string here...';
