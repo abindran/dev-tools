@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import Base64Tool from '../../components/Base64Tool.astro';
 import { languages } from '../../i18n/ui';
+import { getLangFromUrl, useTranslations } from '../../i18n/utils';
 
 export const prerender = true;
 
@@ -10,64 +11,79 @@ export function getStaticPaths() {
     params: { lang },
   }));
 }
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
 ---
 
-<Layout title="Base64 Encode & Decode Online - Free Developer Tool">
+<Layout>
 	<section class="hero">
 		<div class="container">
-			<h2 class="hero-title">Base64 Encode &amp; Decode</h2>
-			<p class="hero-subtitle">
-				Fast, secure, and 100% client-side. Your data never leaves your browser.
-			</p>
+			<h1 class="hero-title">{t('hero.h1')}</h1>
+			<p class="hero-subtitle">{t('hero.subtitle')}</p>
 		</div>
 	</section>
 
 	<Base64Tool />
 
-	<section class="features">
+	<section class="features" aria-labelledby="features-heading">
 		<div class="container">
+			<h2 id="features-heading" class="visually-hidden">Features</h2>
 			<div class="features-grid">
-				<div class="feature card">
-					<div class="feature-icon">⚡</div>
-					<h3>Lightning Fast</h3>
-					<p>Processing happens entirely in your browser with zero server roundtrips.</p>
-				</div>
-				<div class="feature card">
-					<div class="feature-icon">🔒</div>
-					<h3>100% Secure</h3>
-					<p>Your data never leaves your device. No server storage, no logging.</p>
-				</div>
-				<div class="feature card">
-					<div class="feature-icon">🤖</div>
-					<h3>API Access</h3>
-					<p>RESTful API at <code>/api/encode</code> and <code>/api/decode</code>.</p>
-				</div>
+				<article class="feature card">
+					<div class="feature-icon" aria-hidden="true">⚡</div>
+					<h3>{t('feat.fast.title')}</h3>
+					<p>{t('feat.fast.body')}</p>
+				</article>
+				<article class="feature card">
+					<div class="feature-icon" aria-hidden="true">🔒</div>
+					<h3>{t('feat.secure.title')}</h3>
+					<p>{t('feat.secure.body')}</p>
+				</article>
+				<article class="feature card">
+					<div class="feature-icon" aria-hidden="true">🤖</div>
+					<h3>{t('feat.api.title')}</h3>
+					<p>{t('feat.api.body')}</p>
+				</article>
+			</div>
+		</div>
+	</section>
+
+	<section class="info" aria-labelledby="info-heading">
+		<div class="container">
+			<div class="info-card card">
+				<h2 id="info-heading">{t('info.what.title')}</h2>
+				<p>{t('info.what.body')}</p>
+				<h3>{t('info.how.title')}</h3>
+				<p>{t('info.how.body')}</p>
+				<h3>{t('info.api.title')}</h3>
+				<p>
+					{t('info.api.body')} <a href="/openapi.json">OpenAPI</a>.
+				</p>
 			</div>
 		</div>
 	</section>
 </Layout>
 
 <style>
-	.hero {
-		text-align: center;
-		padding: 3rem 0 1rem;
+	.visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
 	}
-	.hero-badge {
-		display: inline-block;
-		padding: 0.25rem 0.75rem;
-		font-size: 0.75rem;
-		font-weight: 600;
-		color: var(--accent);
-		background: var(--accent-glow);
-		border-radius: 999px;
-		border: 1px solid var(--accent);
-		margin-bottom: 1rem;
-	}
+	.hero { text-align: center; padding: 3rem 0 1rem; }
 	.hero-title {
 		font-size: clamp(1.75rem, 5vw, 2.5rem);
 		font-weight: 800;
 		color: var(--text-primary);
 		margin-bottom: 0.5rem;
+		line-height: 1.2;
 	}
 	.hero-subtitle {
 		color: var(--text-secondary);
@@ -75,37 +91,45 @@ export function getStaticPaths() {
 		max-width: 500px;
 		margin: 0 auto;
 	}
-	.features {
-		padding: 3rem 0;
-	}
+	.features { padding: 3rem 0; }
 	.features-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 		gap: 1rem;
 	}
-	.feature {
-		padding: 1.5rem;
-		text-align: center;
-	}
-	.feature-icon {
-		font-size: 2rem;
-		margin-bottom: 0.75rem;
-	}
+	.feature { padding: 1.5rem; text-align: center; }
+	.feature-icon { font-size: 2rem; margin-bottom: 0.75rem; }
 	.feature h3 {
 		font-size: 1rem;
 		font-weight: 700;
 		margin-bottom: 0.5rem;
+		color: var(--text-primary);
 	}
 	.feature p {
 		font-size: 0.875rem;
 		color: var(--text-secondary);
 		line-height: 1.5;
 	}
-	.feature code {
-		background: var(--bg-tertiary);
-		padding: 0.15rem 0.35rem;
-		border-radius: 4px;
-		font-size: 0.8rem;
-		border: 1px solid var(--border);
+	.info { padding: 0 0 3rem; }
+	.info-card { padding: 2rem; }
+	.info-card h2,
+	.info-card h3 {
+		font-size: 1.1rem;
+		font-weight: 700;
+		margin-bottom: 0.5rem;
+		margin-top: 1.5rem;
+		color: var(--text-primary);
+	}
+	.info-card h2:first-child,
+	.info-card h3:first-child { margin-top: 0; }
+	.info-card p {
+		font-size: 0.9rem;
+		color: var(--text-secondary);
+		line-height: 1.7;
+	}
+	.info-card a {
+		color: var(--accent);
+		text-decoration: underline;
+		text-underline-offset: 2px;
 	}
 </style>

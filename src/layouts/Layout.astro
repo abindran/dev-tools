@@ -1,40 +1,94 @@
 ---
 import '../styles/global.css';
 import { getLangFromUrl, useTranslations } from '../i18n/utils';
+import { languages, defaultLang } from '../i18n/ui';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import LanguagePicker from '../components/LanguagePicker.astro';
 
 interface Props {
-	title: string;
+	title?: string;
 	description?: string;
 }
 
-const { title, description = 'Free online Base64 encoder and decoder. Encode text, decode Base64 strings instantly in your browser. 100% client-side, fast, and secure.' } = Astro.props;
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+
+const { title = t('meta.title'), description = t('meta.description') } = Astro.props;
+
+const siteUrl = Astro.site?.toString().replace(/\/$/, '') ?? 'https://base64decode.online';
+
+// Build canonical and hreflang URLs based on current path's locale-stripped form.
+const pathParts = Astro.url.pathname.split('/').filter(Boolean);
+const restPath = pathParts.length && pathParts[0] in languages ? pathParts.slice(1).join('/') : pathParts.join('/');
+const trailing = restPath ? `/${restPath}/` : '/';
+
+function urlFor(loc: string) {
+	if (loc === defaultLang) return `${siteUrl}${trailing}`;
+	return `${siteUrl}/${loc}${trailing}`;
+}
+
+const canonical = urlFor(lang);
+const ogLocaleMap: Record<string, string> = { en: 'en_US', es: 'es_ES', fr: 'fr_FR' };
+const ogImage = `${siteUrl}/og-image.png`;
 ---
 
 <!doctype html>
 <html lang={lang}>
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="description" content={description} />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<meta name="robots" content="index, follow, max-image-preview:large" />
 		<meta name="generator" content={Astro.generator} />
-		<meta name="robots" content="index, follow" />
+		<meta name="theme-color" content="#0b0b0f" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" type="image/png" href="/favicon.png" />
+		<link rel="apple-touch-icon" href="/favicon.png" />
+		<link rel="canonical" href={canonical} />
+
+		{Object.keys(languages).map((loc) => (
+			<link rel="alternate" hreflang={loc} href={urlFor(loc)} />
+		))}
+		<link rel="alternate" hreflang="x-default" href={urlFor(defaultLang)} />
+
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="Base64 Tool" />
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
-		<meta property="og:type" content="website" />
-		<title>{title}</title>
+		<meta property="og:url" content={canonical} />
+		<meta property="og:locale" content={ogLocaleMap[lang] ?? 'en_US'} />
+		{Object.keys(languages).filter(l => l !== lang).map(l => (
+			<meta property="og:locale:alternate" content={ogLocaleMap[l]} />
+		))}
+		<meta property="og:image" content={ogImage} />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:alt" content="Base64 Encode & Decode — Free Developer Tool" />
+
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={ogImage} />
+
 		<script is:inline type="application/ld+json" set:html={JSON.stringify({
 			"@context": "https://schema.org",
 			"@type": "WebApplication",
 			"name": "Base64 Tool",
+			"url": canonical,
+			"inLanguage": lang,
 			"applicationCategory": "DeveloperApplication",
 			"operatingSystem": "All",
-			"offers": { "@type": "Offer", "price": "0" },
-			"description": "Free online Base64 encoder and decoder with API access for developers and AI systems."
+			"browserRequirements": "Requires JavaScript. Requires HTML5.",
+			"offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+			"description": description,
+			"featureList": [
+				"Encode text to Base64",
+				"Decode Base64 to text",
+				"UTF-8 safe",
+				"Client-side processing",
+				"REST API for developers"
+			]
 		})} />
 		<script is:inline>
 			;(function() {
@@ -48,8 +102,8 @@ const t = useTranslations(lang);
 	<body>
 		<nav class="navbar">
 			<div class="navbar-inner">
-				<a href="/" class="navbar-logo">
-					<span class="navbar-logo-icon">⚡</span>
+				<a href={lang === defaultLang ? '/' : `/${lang}/`} class="navbar-logo" aria-label={t('nav.title')}>
+					<span class="navbar-logo-icon" aria-hidden="true">⚡</span>
 					<span class="navbar-logo-text">{t('nav.title')}</span>
 				</a>
 				<div class="navbar-actions">
@@ -63,7 +117,7 @@ const t = useTranslations(lang);
 		</main>
 		<footer class="site-footer">
 			<div class="site-footer-inner">
-				<p>© 2025 Base64 Tool · All processing happens in your browser</p>
+				<p>{t('footer.text')}</p>
 			</div>
 		</footer>
 	</body>

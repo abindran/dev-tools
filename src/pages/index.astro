@@ -1,66 +1,57 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Base64Tool from '../components/Base64Tool.astro';
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
 
 export const prerender = true;
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
 ---
 
-<Layout title="Base64 Encode & Decode Online - Free Developer Tool">
+<Layout>
 	<section class="hero">
 		<div class="container">
-			<h2 class="hero-title">Base64 Encode &amp; Decode</h2>
-			<p class="hero-subtitle">
-				Fast, secure, and 100% client-side. Your data never leaves your browser.
-			</p>
+			<h1 class="hero-title">{t('hero.h1')}</h1>
+			<p class="hero-subtitle">{t('hero.subtitle')}</p>
 		</div>
 	</section>
 
 	<Base64Tool />
 
-	<section class="features">
+	<section class="features" aria-labelledby="features-heading">
 		<div class="container">
+			<h2 id="features-heading" class="visually-hidden">Features</h2>
 			<div class="features-grid">
-				<div class="feature card">
-					<div class="feature-icon">⚡</div>
-					<h3>Lightning Fast</h3>
-					<p>Processing happens entirely in your browser with zero server roundtrips. Instant results.</p>
-				</div>
-				<div class="feature card">
-					<div class="feature-icon">🔒</div>
-					<h3>100% Secure</h3>
-					<p>Your data never leaves your device. No server storage, no logging, complete privacy.</p>
-				</div>
-				<div class="feature card">
-					<div class="feature-icon">🤖</div>
-					<h3>API Access</h3>
+				<article class="feature card">
+					<div class="feature-icon" aria-hidden="true">⚡</div>
+					<h3>{t('feat.fast.title')}</h3>
+					<p>{t('feat.fast.body')}</p>
+				</article>
+				<article class="feature card">
+					<div class="feature-icon" aria-hidden="true">🔒</div>
+					<h3>{t('feat.secure.title')}</h3>
+					<p>{t('feat.secure.body')}</p>
+				</article>
+				<article class="feature card">
+					<div class="feature-icon" aria-hidden="true">🤖</div>
+					<h3>{t('feat.api.title')}</h3>
 					<p>RESTful API at <code>/api/encode</code> and <code>/api/decode</code> for automation and AI agents.</p>
-				</div>
+				</article>
 			</div>
 		</div>
 	</section>
 
-	<section class="info">
+	<section class="info" aria-labelledby="info-heading">
 		<div class="container">
 			<div class="info-card card">
-				<h3>What is Base64 Encoding?</h3>
+				<h2 id="info-heading">{t('info.what.title')}</h2>
+				<p>{t('info.what.body')}</p>
+				<h3>{t('info.how.title')}</h3>
+				<p>{t('info.how.body')}</p>
+				<h3>{t('info.api.title')}</h3>
 				<p>
-					Base64 is a binary-to-text encoding scheme that represents binary data in an ASCII string format.
-					It's widely used in web development for embedding images in CSS/HTML, encoding email attachments (MIME),
-					storing complex data in JSON or XML, and handling authentication tokens like JWT.
-				</p>
-				<h3>How Does It Work?</h3>
-				<p>
-					Base64 takes groups of 3 bytes (24 bits) and splits them into 4 groups of 6 bits each.
-					Each 6-bit group maps to one of 64 printable ASCII characters (A-Z, a-z, 0-9, +, /),
-					with <code>=</code> used as padding. This makes it safe to transmit binary data
-					through text-based systems.
-				</p>
-				<h3>API for Developers &amp; AI</h3>
-				<p>
-					Integrate our Base64 tool directly into your workflows. Send a POST request
-					to <code>/api/encode</code> with a JSON body containing your text, or
-					to <code>/api/decode</code> with a JSON body containing the Base64 string.
-					Our full <a href="/openapi.json">OpenAPI specification</a> is available for
+					{t('info.api.body')} Our full <a href="/openapi.json">OpenAPI specification</a> is available for
 					LLM orchestrators, LangChain agents, and automation platforms.
 				</p>
 			</div>
@@ -69,21 +60,20 @@ export const prerender = true;
 </Layout>
 
 <style>
+	.visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
 	.hero {
 		text-align: center;
 		padding: 3rem 0 1rem;
-	}
-	.hero-badge {
-		display: inline-block;
-		padding: 0.25rem 0.75rem;
-		font-size: 0.75rem;
-		font-weight: 600;
-		color: var(--accent);
-		background: var(--accent-glow);
-		border-radius: 999px;
-		border: 1px solid var(--accent);
-		margin-bottom: 1rem;
-		letter-spacing: 0.03em;
 	}
 	.hero-title {
 		font-size: clamp(1.75rem, 5vw, 2.5rem);
@@ -99,7 +89,6 @@ export const prerender = true;
 		margin: 0 auto;
 	}
 
-	/* Features */
 	.features {
 		padding: 3rem 0;
 	}
@@ -135,13 +124,13 @@ export const prerender = true;
 		border: 1px solid var(--border);
 	}
 
-	/* Info */
 	.info {
 		padding: 0 0 3rem;
 	}
 	.info-card {
 		padding: 2rem;
 	}
+	.info-card h2,
 	.info-card h3 {
 		font-size: 1.1rem;
 		font-weight: 700;
@@ -149,6 +138,7 @@ export const prerender = true;
 		margin-top: 1.5rem;
 		color: var(--text-primary);
 	}
+	.info-card h2:first-child,
 	.info-card h3:first-child {
 		margin-top: 0;
 	}

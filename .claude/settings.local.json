@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(sips -g pixelWidth -g pixelHeight /Users/abindran-21221/PaxAutomata/dev-tools/public/favicon.png /Users/abindran-21221/PaxAutomata/dev-tools/public/og-image.png)",
+      "Bash(node compress-images.mjs)"
+    ]
+  }
+}
