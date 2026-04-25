@@ -4,40 +4,60 @@ import { getLangFromUrl, useTranslations } from '../i18n/utils';
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 ---
-<button
-  id="bookmark-btn"
-  class="theme-btn"
-  title={t('bookmark.title')}
-  aria-label={t('bookmark.title')}
-  data-press-mac={t('bookmark.pressMac')}
-  data-press-win={t('bookmark.pressWin')}
->
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-</button>
-<div id="bookmark-toast" class="bookmark-toast" role="status" aria-live="polite" hidden></div>
+<div class="bookmark-wrap">
+  <button
+    id="bookmark-btn"
+    class="theme-btn"
+    title={t('bookmark.title')}
+    aria-label={t('bookmark.title')}
+    aria-describedby="bookmark-tip"
+    data-press-mac={t('bookmark.pressMac')}
+    data-press-win={t('bookmark.pressWin')}
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+  </button>
+  <div id="bookmark-tip" class="bookmark-tip" role="status" aria-live="polite" hidden>
+    <span class="bookmark-tip-icon" aria-hidden="true">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+    </span>
+    <span class="bookmark-tip-body">
+      <span class="bookmark-tip-label">Tip</span>
+      <span class="bookmark-tip-text" id="bookmark-tip-text"></span>
+    </span>
+  </div>
+</div>
 
 <script>
   const btn = document.getElementById('bookmark-btn') as HTMLButtonElement | null;
-  const toast = document.getElementById('bookmark-toast');
+  const tip = document.getElementById('bookmark-tip');
+  const tipText = document.getElementById('bookmark-tip-text');
   const isMac = /Mac|iPhone|iPad|iPod/i.test(navigator.platform);
 
   let hideTimer: number | undefined;
-  function showToast(message: string) {
-    if (!toast) return;
-    toast.textContent = message;
-    toast.hidden = false;
-    requestAnimationFrame(() => toast.classList.add('is-visible'));
+  function showTip(message: string) {
+    if (!tip || !tipText) return;
+    tipText.textContent = message;
+    tip.hidden = false;
+    requestAnimationFrame(() => tip.classList.add('is-visible'));
     if (hideTimer) window.clearTimeout(hideTimer);
     hideTimer = window.setTimeout(() => {
-      toast.classList.remove('is-visible');
-      window.setTimeout(() => { toast.hidden = true; }, 250);
-    }, 3500);
+      tip.classList.remove('is-visible');
+      window.setTimeout(() => { tip.hidden = true; }, 220);
+    }, 4000);
   }
 
   btn?.addEventListener('click', () => {
     const message = isMac
-      ? (btn.dataset.pressMac ?? 'Press ⌘ + D to bookmark this page')
-      : (btn.dataset.pressWin ?? 'Press Ctrl + D to bookmark this page');
-    showToast(message);
+      ? (btn.dataset.pressMac ?? 'Press ⌘ + D to bookmark this tab')
+      : (btn.dataset.pressWin ?? 'Press Ctrl + D to bookmark this tab');
+    showTip(message);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!tip || tip.hidden) return;
+    const target = e.target as Node;
+    if (btn?.contains(target) || tip.contains(target)) return;
+    tip.classList.remove('is-visible');
+    window.setTimeout(() => { tip.hidden = true; }, 220);
   });
 </script>
