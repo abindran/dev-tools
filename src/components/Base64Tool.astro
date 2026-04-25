@@ -81,8 +81,9 @@ const t = useTranslations(lang);
           <div class="pane-header">
             <label for="output-text" class="pane-label" id="output-label">Base64</label>
             <div class="pane-actions">
-              <button id="btn-copy" class="btn-icon" title={t('tool.copy')}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <button id="btn-copy" class="btn-copy" title={t('tool.copy')} aria-label={t('tool.copy')}>
+                <svg class="icon-copy" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <svg class="icon-check" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 <span id="copy-text">{t('tool.copy')}</span>
               </button>
             </div>
@@ -360,14 +361,42 @@ const t = useTranslations(lang);
     if (inputCount) inputCount.textContent = '0 chars';
   });
 
-  btnCopy?.addEventListener('click', () => {
+  function fallbackCopy(text: string): boolean {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  btnCopy?.addEventListener('click', async () => {
     if (!outputEl.value) return;
-    navigator.clipboard.writeText(outputEl.value);
-    clarity('event', 'output_copied');
-    if (copyText) {
-      copyText.textContent = 'Copied!';
-      setTimeout(() => { if (copyText) copyText.textContent = 'Copy'; }, 1500);
+    let success = false;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(outputEl.value);
+        success = true;
+      } else {
+        success = fallbackCopy(outputEl.value);
+      }
+    } catch {
+      success = fallbackCopy(outputEl.value);
     }
+    clarity('event', success ? 'output_copied' : 'output_copy_failed');
+    btnCopy.classList.toggle('copied', success);
+    btnCopy.classList.toggle('copy-failed', !success);
+    if (copyText) {
+      copyText.textContent = success ? 'Copied!' : 'Copy failed';
+    }
+    setTimeout(() => {
+      btnCopy.classList.remove('copied', 'copy-failed');
+      if (copyText) copyText.textContent = 'Copy';
+    }, 1500);
   });
 
   btnSample?.addEventListener('click', () => {
@@ -508,26 +537,46 @@ const t = useTranslations(lang);
     gap: 0.5rem;
   }
 
-  .btn-icon {
+  .btn-copy {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0.25rem 0.5rem;
+    padding: 0.4rem 0.75rem;
     border-radius: 6px;
     border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text-muted);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
     font-family: var(--font);
-    font-size: 0.7rem;
-    font-weight: 500;
+    font-size: 0.75rem;
+    font-weight: 600;
     cursor: pointer;
     transition: all var(--transition);
   }
 
-  .btn-icon:hover {
+  .btn-copy:hover {
     color: var(--accent);
     border-color: var(--accent);
     background: var(--accent-glow);
+  }
+
+  .btn-copy:active {
+    transform: scale(0.97);
+  }
+
+  .btn-copy .icon-check { display: none; }
+  .btn-copy.copied .icon-copy { display: none; }
+  .btn-copy.copied .icon-check { display: inline; }
+
+  .btn-copy.copied {
+    color: #16a34a;
+    border-color: #16a34a;
+    background: rgba(22, 163, 74, 0.08);
+  }
+
+  .btn-copy.copy-failed {
+    color: #dc2626;
+    border-color: #dc2626;
+    background: rgba(220, 38, 38, 0.08);
   }
 
   .tool-textarea {
