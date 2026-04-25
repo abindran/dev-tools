@@ -260,8 +260,14 @@ const t = useTranslations(lang);
     outputEl.placeholder = m === 'encode' ? 'Encoded Base64 will appear here...' : 'Decoded text will appear here...';
   }
 
-  tabEncode?.addEventListener('click', () => setMode('encode'));
-  tabDecode?.addEventListener('click', () => setMode('decode'));
+  tabEncode?.addEventListener('click', () => {
+    setMode('encode');
+    if (inputEl.value.trim()) convert();
+  });
+  tabDecode?.addEventListener('click', () => {
+    setMode('decode');
+    if (inputEl.value.trim()) convert();
+  });
 
   inputEl?.addEventListener('input', () => {
     if (inputCount) inputCount.textContent = `${inputEl.value.length} chars`;
