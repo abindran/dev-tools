@@ -232,41 +232,62 @@ a:hover {
   color: var(--text-muted);
 }
 
-/* ===== LANGUAGE SWITCHER ===== */
-.lang-sw {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 3px;
-  gap: 2px;
+/* ===== LANGUAGE BAR ===== */
+.lang-bar {
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
 }
-.lang-item {
+.lang-bar-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 6px 1.5rem;
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+.lang-bar-inner::-webkit-scrollbar { display: none; }
+.lang-chip {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
   font-family: var(--font);
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-weight: 500;
   color: var(--text-muted);
   text-decoration: none;
   border-radius: 999px;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  user-select: none;
-  line-height: 1;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
 }
-.lang-item:hover:not(.lang-active) {
+.lang-chip:hover {
   color: var(--text-primary);
-  background: var(--border);
+  background: var(--bg-tertiary);
 }
-.lang-active {
+.lang-chip.is-active {
   background: var(--accent);
-  color: #ffffff !important;
-  box-shadow: 0 1px 4px rgba(79, 70, 229, 0.4);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(79, 70, 229, 0.35);
+}
+.lang-chip.is-active:hover {
+  background: var(--accent);
+  color: #ffffff;
+}
+@media (max-width: 540px) {
+  .lang-bar-inner {
+    padding: 6px 1rem;
+  }
+  .lang-chip {
+    font-size: 0.74rem;
+    padding: 4px 9px;
+  }
 }
 
 /* ===== THEME TOGGLE ===== */
@@ -294,80 +315,45 @@ a:hover {
 :root:not([data-theme='dark']) .icon-sun { display: none; }
 :root:not([data-theme='dark']) .icon-moon { display: block; }
 
-/* ===== BOOKMARK TIP (popover anchored to button) ===== */
-.bookmark-wrap {
-  position: relative;
-  display: inline-flex;
-}
-.bookmark-tip {
-  position: absolute;
-  top: calc(100% + 12px);
-  right: 0;
+/* ===== BOOKMARK HINT ===== */
+.bookmark-hint {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px 10px 12px;
-  background: linear-gradient(135deg, var(--accent), #6366f1);
-  color: #fff;
-  border-radius: 12px;
-  font-size: 13px;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.10));
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  font-size: 0.76rem;
   font-weight: 500;
-  line-height: 1.35;
+  color: var(--text-secondary);
   white-space: nowrap;
-  box-shadow: 0 10px 28px rgba(79, 70, 229, 0.35), 0 2px 6px rgba(0, 0, 0, 0.12);
-  z-index: 1000;
-  opacity: 0;
-  transform: translateY(-6px) scale(0.96);
-  transform-origin: top right;
-  transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.4);
-  pointer-events: none;
+  box-shadow: 0 1px 6px rgba(79, 70, 229, 0.10);
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
 }
-.bookmark-tip::before {
-  content: '';
-  position: absolute;
-  top: -6px;
-  right: 14px;
-  width: 12px;
-  height: 12px;
-  background: var(--accent);
-  transform: rotate(45deg);
-  border-radius: 2px;
+.bookmark-hint:hover {
+  transform: translateY(-1px);
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.18);
 }
-.bookmark-tip.is-visible {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  pointer-events: auto;
-}
-.bookmark-tip-icon {
+.bookmark-hint-badge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.18);
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), #a855f7);
   color: #fff;
-  flex-shrink: 0;
-}
-.bookmark-tip-body {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-}
-.bookmark-tip-label {
-  font-size: 11px;
+  font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 1px 4px rgba(79, 70, 229, 0.35);
 }
-.bookmark-tip-text {
-  font-weight: 500;
+.bookmark-hint-text {
+  color: var(--text-primary);
 }
-@media (max-width: 480px) {
-  .bookmark-tip { white-space: normal; max-width: min(78vw, 280px); }
+@media (max-width: 640px) {
+  .bookmark-hint { display: none; }
 }
 
 
