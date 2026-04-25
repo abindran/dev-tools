@@ -236,6 +236,7 @@ a:hover {
 .lang-sw {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -250,7 +251,6 @@ a:hover {
   font-family: var(--font);
   font-size: 0.7rem;
   font-weight: 600;
-  letter-spacing: 0.05em;
   color: var(--text-muted);
   text-decoration: none;
   border-radius: 999px;
