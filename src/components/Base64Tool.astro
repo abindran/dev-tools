@@ -116,6 +116,23 @@ const t = useTranslations(lang);
 
   let mode: 'encode' | 'decode' = 'encode';
 
+  // ---- Clarity tracking (no-op if Clarity not loaded) ----
+  type ClarityFn = (...args: unknown[]) => void;
+  function clarity(...args: unknown[]) {
+    const c = (window as unknown as { clarity?: ClarityFn }).clarity;
+    if (typeof c === 'function') c(...args);
+  }
+
+  let trackTimer: ReturnType<typeof setTimeout> | null = null;
+  function trackConversion(action: 'encode' | 'decode', charset: string, success: boolean) {
+    if (trackTimer) clearTimeout(trackTimer);
+    trackTimer = setTimeout(() => {
+      clarity('event', success ? `${action}_success` : `${action}_error`);
+      clarity('set', 'charset', charset);
+      clarity('set', 'last_action', action);
+    }, 1200);
+  }
+
   // ---- Character encoding helpers ----
 
   /** Single-byte encodings supported by TextDecoder. We build a reverse
@@ -290,6 +307,7 @@ const t = useTranslations(lang);
         const invalidChar = b64.replace(/=+$/, '').match(/[^A-Za-z0-9+/]/);
         if (invalidChar) {
           outputEl.value = `⚠ Invalid character "${invalidChar[0]}" found at position ${(invalidChar.index ?? 0) + 1}. Base64 only allows A-Z, a-z, 0-9, +, / and = for padding.`;
+          trackConversion('decode', charset, false);
           return;
         }
         while (b64.length % 4 !== 0) b64 += '=';
@@ -302,7 +320,9 @@ const t = useTranslations(lang);
           outputEl.value = bytesToText(bytes, charset);
         }
       }
+      trackConversion(mode, charset, true);
     } catch (e: any) {
+      trackConversion(mode, charset, false);
       if (mode === 'encode') {
         outputEl.value = e?.message?.startsWith('Character')
           ? `⚠ ${e.message}`
@@ -343,6 +363,7 @@ const t = useTranslations(lang);
   btnCopy?.addEventListener('click', () => {
     if (!outputEl.value) return;
     navigator.clipboard.writeText(outputEl.value);
+    clarity('event', 'output_copied');
     if (copyText) {
       copyText.textContent = 'Copied!';
       setTimeout(() => { if (copyText) copyText.textContent = 'Copy'; }, 1500);
@@ -350,6 +371,7 @@ const t = useTranslations(lang);
   });
 
   btnSample?.addEventListener('click', () => {
+    clarity('event', 'sample_clicked');
     if (mode === 'encode') {
       inputEl.value = 'Hello, World! This is a Base64 encoding example. 🚀';
     } else {
