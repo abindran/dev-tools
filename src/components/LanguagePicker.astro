@@ -5,16 +5,17 @@ const currentLang = getLangFromUrl(Astro.url);
 const langEntries = Object.entries(languages);
 ---
 <div class="lang-sw">
-  {langEntries.map(([code]) => {
+  {langEntries.map(([code, name]) => {
     const href = code === 'en' ? '/' : `/${code}`;
     const isActive = code === currentLang;
     return (
       <a
         href={href}
         class={`lang-item ${isActive ? 'lang-active' : ''}`}
-        title={languages[code as keyof typeof languages]}
+        title={name}
+        lang={code}
       >
-        {code.toUpperCase()}
+        {name}
       </a>
     );
   })}
