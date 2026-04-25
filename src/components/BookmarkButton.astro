@@ -1,0 +1,43 @@
+---
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+<button
+  id="bookmark-btn"
+  class="theme-btn"
+  title={t('bookmark.title')}
+  aria-label={t('bookmark.title')}
+  data-press-mac={t('bookmark.pressMac')}
+  data-press-win={t('bookmark.pressWin')}
+>
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+</button>
+<div id="bookmark-toast" class="bookmark-toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+  const btn = document.getElementById('bookmark-btn') as HTMLButtonElement | null;
+  const toast = document.getElementById('bookmark-toast');
+  const isMac = /Mac|iPhone|iPad|iPod/i.test(navigator.platform);
+
+  let hideTimer: number | undefined;
+  function showToast(message: string) {
+    if (!toast) return;
+    toast.textContent = message;
+    toast.hidden = false;
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
+    if (hideTimer) window.clearTimeout(hideTimer);
+    hideTimer = window.setTimeout(() => {
+      toast.classList.remove('is-visible');
+      window.setTimeout(() => { toast.hidden = true; }, 250);
+    }, 3500);
+  }
+
+  btn?.addEventListener('click', () => {
+    const message = isMac
+      ? (btn.dataset.pressMac ?? 'Press ⌘ + D to bookmark this page')
+      : (btn.dataset.pressWin ?? 'Press Ctrl + D to bookmark this page');
+    showToast(message);
+  });
+</script>
