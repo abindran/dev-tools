@@ -58,6 +58,10 @@ const t = useTranslations(lang);
           <option value="euc-kr">EUC-KR (Korean)</option>
         </optgroup>
       </select>
+      <label id="per-line-wrap" class="per-line-toggle" hidden>
+        <input type="checkbox" id="per-line-toggle" />
+        <span>Decode each line separately</span>
+      </label>
     </div>
 
     <!-- Tool Card -->
@@ -115,6 +119,8 @@ const t = useTranslations(lang);
   const tabDecode = document.getElementById('tab-decode');
   const charsetSelect = document.getElementById('charset-select') as HTMLSelectElement;
   const charsetLabel = document.getElementById('charset-label');
+  const perLineWrap = document.getElementById('per-line-wrap');
+  const perLineToggle = document.getElementById('per-line-toggle') as HTMLInputElement | null;
 
   let mode: 'encode' | 'decode' = 'encode';
 
@@ -259,6 +265,7 @@ const t = useTranslations(lang);
     if (outputLabel) outputLabel.textContent = m === 'encode' ? 'Base64' : 'Text';
     inputEl.placeholder = m === 'encode' ? 'Type or paste your text here...' : 'Paste Base64 string here...';
     outputEl.placeholder = m === 'encode' ? 'Encoded Base64 will appear here...' : 'Decoded text will appear here...';
+    if (perLineWrap) perLineWrap.hidden = m !== 'decode';
   }
 
   tabEncode?.addEventListener('click', () => {
@@ -298,6 +305,21 @@ const t = useTranslations(lang);
     return data.text;
   }
 
+  async function decodeOne(raw: string, charset: string): Promise<string> {
+    let b64 = raw.replace(/[\s\r\n]+/g, '');
+    const invalidChar = b64.replace(/=+$/, '').match(/[^A-Za-z0-9+/]/);
+    if (invalidChar) {
+      throw new Error(`Invalid character "${invalidChar[0]}" at position ${(invalidChar.index ?? 0) + 1}`);
+    }
+    while (b64.length % 4 !== 0) b64 += '=';
+    const multiByte = new Set(['gbk', 'big5', 'euc-jp', 'shift_jis', 'euc-kr']);
+    if (multiByte.has(charset)) {
+      return await apiDecode(b64, charset);
+    }
+    const bytes = base64ToBytes(b64);
+    return bytesToText(bytes, charset);
+  }
+
   async function convert() {
     if (!inputEl.value.trim()) return;
     const charset = charsetSelect?.value || 'utf-8';
@@ -314,22 +336,25 @@ const t = useTranslations(lang);
           }
         }
       } else {
-        let b64 = inputEl.value.replace(/[\s\r\n]+/g, '');
-        // Validate characters before attempting decode
-        const invalidChar = b64.replace(/=+$/, '').match(/[^A-Za-z0-9+/]/);
-        if (invalidChar) {
-          outputEl.value = `⚠ Invalid character "${invalidChar[0]}" found at position ${(invalidChar.index ?? 0) + 1}. Base64 only allows A-Z, a-z, 0-9, +, / and = for padding.`;
-          trackConversion('decode', charset, false);
+        const perLine = perLineToggle?.checked && mode === 'decode';
+        if (perLine) {
+          const lines = inputEl.value.split(/\r?\n/);
+          const out: string[] = [];
+          let anyFail = false;
+          for (const line of lines) {
+            if (!line.trim()) { out.push(''); continue; }
+            try {
+              out.push(await decodeOne(line, charset));
+            } catch (err: any) {
+              anyFail = true;
+              out.push(`⚠ ${err?.message || 'decode failed'}`);
+            }
+          }
+          outputEl.value = out.join('\n');
+          trackConversion('decode', charset, !anyFail);
           return;
-        }
-        while (b64.length % 4 !== 0) b64 += '=';
-        // Multi-byte CJK charsets: use API
-        const multiByte = new Set(['gbk', 'big5', 'euc-jp', 'shift_jis', 'euc-kr']);
-        if (multiByte.has(charset)) {
-          outputEl.value = await apiDecode(b64, charset);
         } else {
-          const bytes = base64ToBytes(b64);
-          outputEl.value = bytesToText(bytes, charset);
+          outputEl.value = await decodeOne(inputEl.value, charset);
         }
       }
       trackConversion(mode, charset, true);
@@ -363,6 +388,10 @@ const t = useTranslations(lang);
 
   // Re-convert when charset changes
   charsetSelect?.addEventListener('change', () => {
+    if (inputEl.value.trim()) convert();
+  });
+
+  perLineToggle?.addEventListener('change', () => {
     if (inputEl.value.trim()) convert();
   });
 
@@ -475,6 +504,20 @@ const t = useTranslations(lang);
   .charset-select:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .per-line-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .per-line-toggle input {
+    cursor: pointer;
   }
 
   .tab {
