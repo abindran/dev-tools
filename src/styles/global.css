@@ -294,4 +294,27 @@ a:hover {
 :root:not([data-theme='dark']) .icon-sun { display: none; }
 :root:not([data-theme='dark']) .icon-moon { display: block; }
 
+/* ===== BOOKMARK TOAST ===== */
+.bookmark-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  transform: translate(-50%, 12px);
+  background: var(--text-primary);
+  color: var(--bg-secondary);
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition), transform var(--transition);
+}
+.bookmark-toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 

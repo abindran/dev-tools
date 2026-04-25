@@ -4,6 +4,7 @@ import { getLangFromUrl, useTranslations } from '../i18n/utils';
 import { languages, defaultLang } from '../i18n/ui';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import LanguagePicker from '../components/LanguagePicker.astro';
+import BookmarkButton from '../components/BookmarkButton.astro';
 
 interface Props {
 	title?: string;
@@ -120,6 +121,7 @@ const clarityId = import.meta.env.PUBLIC_CLARITY_ID;
 				</a>
 				<div class="navbar-actions">
 					<LanguagePicker />
+					<BookmarkButton />
 					<ThemeToggle />
 				</div>
 			</div>
