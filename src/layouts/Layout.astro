@@ -29,7 +29,20 @@ function urlFor(loc: string) {
 }
 
 const canonical = urlFor(lang);
-const ogLocaleMap: Record<string, string> = { en: 'en_US', es: 'es_ES', fr: 'fr_FR' };
+const ogLocaleMap: Record<string, string> = {
+	en: 'en_US',
+	es: 'es_ES',
+	fr: 'fr_FR',
+	de: 'de_DE',
+	it: 'it_IT',
+	pt: 'pt_PT',
+	nl: 'nl_NL',
+	ru: 'ru_RU',
+	ja: 'ja_JP',
+	ko: 'ko_KR',
+	zh: 'zh_CN',
+	hi: 'hi_IN',
+};
 const ogImage = `${siteUrl}/og-image.png`;
 
 const clarityId = import.meta.env.PUBLIC_CLARITY_ID;
@@ -42,6 +55,7 @@ const clarityId = import.meta.env.PUBLIC_CLARITY_ID;
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>{title}</title>
 		<meta name="description" content={description} />
+		<meta name="keywords" content={t('meta.keywords')} />
 		<meta name="robots" content="index, follow, max-image-preview:large" />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="theme-color" content="#0b0b0f" />
@@ -68,30 +82,56 @@ const clarityId = import.meta.env.PUBLIC_CLARITY_ID;
 		<meta property="og:image" content={ogImage} />
 		<meta property="og:image:width" content="1200" />
 		<meta property="og:image:height" content="630" />
-		<meta property="og:image:alt" content="Base64 Encode & Decode — Free Developer Tool" />
+		<meta property="og:image:alt" content={t('meta.imageAlt')} />
 
 		<meta name="twitter:card" content="summary_large_image" />
 		<meta name="twitter:title" content={title} />
 		<meta name="twitter:description" content={description} />
 		<meta name="twitter:image" content={ogImage} />
+		<meta name="twitter:image:alt" content={t('meta.imageAlt')} />
 
 		<script is:inline type="application/ld+json" set:html={JSON.stringify({
 			"@context": "https://schema.org",
-			"@type": "WebApplication",
-			"name": "Base64 Tool",
-			"url": canonical,
-			"inLanguage": lang,
-			"applicationCategory": "DeveloperApplication",
-			"operatingSystem": "All",
-			"browserRequirements": "Requires JavaScript. Requires HTML5.",
-			"offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-			"description": description,
-			"featureList": [
-				"Encode text to Base64",
-				"Decode Base64 to text",
-				"UTF-8 safe",
-				"Client-side processing",
-				"REST API for developers"
+			"@graph": [
+				{
+					"@type": "WebApplication",
+					"name": "Base64 Tool",
+					"url": canonical,
+					"inLanguage": lang,
+					"applicationCategory": "DeveloperApplication",
+					"operatingSystem": "All",
+					"browserRequirements": "Requires JavaScript. Requires HTML5.",
+					"offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+					"description": description,
+					"featureList": [
+						"Encode text to Base64",
+						"Decode Base64 to text",
+						"UTF-8 safe",
+						"Client-side processing",
+						"REST API for developers"
+					]
+				},
+				{
+					"@type": "FAQPage",
+					"inLanguage": lang,
+					"mainEntity": [
+						{
+							"@type": "Question",
+							"name": t('info.what.title'),
+							"acceptedAnswer": { "@type": "Answer", "text": t('info.what.body') }
+						},
+						{
+							"@type": "Question",
+							"name": t('info.how.title'),
+							"acceptedAnswer": { "@type": "Answer", "text": t('info.how.body') }
+						},
+						{
+							"@type": "Question",
+							"name": t('info.api.title'),
+							"acceptedAnswer": { "@type": "Answer", "text": t('info.api.body') }
+						}
+					]
+				}
 			]
 		})} />
 		{clarityId && (
